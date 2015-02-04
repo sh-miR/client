@@ -4,6 +4,8 @@
 
 Client for [sh-miR Designer RESTful API](https://github.com/Nozdi/shmir)
 
+Before usage you need to set up url in settings.py!
+
 Example usage:
 
 Fold sequence via mfold:
@@ -23,7 +25,7 @@ Optional parameters
 * --max_gc : Maximal "GC" content in strand -- default: `60`
 * --max_offtarget : Maximal offtarget of strand -- default: `10`
 * --mirna_name : The name of miRNA backbone to use -- default: `"all"`
-* --stymulators : One of `["yes", "no", "no_difference"]` -- default: `"no_difference"`
+* --immuno : One of `["yes", "no", "no_difference"]` -- default: `"no_difference"`
 ```
 ./shmir_client.py from_transcript NM_001618.3 --mirna_name miR-30a --min_gc 22
 ```

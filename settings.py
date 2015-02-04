@@ -5,7 +5,7 @@
         if you do not like to download sh-miR designer project
 """
 
-URL = "http://127.0.0.1:8080"
+URL = ""
 
 METHODS = {
     "mfold_create": URL + "/mfold/{}",

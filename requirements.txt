@@ -1,3 +1,4 @@
 requests
 Sphinx==1.2.3
 sphinxcontrib-fulltoc==1.0
+prettytable

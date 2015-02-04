@@ -7,6 +7,7 @@ import requests
 import time
 import zipfile
 import os
+import prettytable
 from settings import METHODS
 
 
@@ -140,3 +141,19 @@ def wait_until_task(task_id, checker, getter, *args):
         return
 
     return getter(task_id, *args)
+
+
+def print_parsed_result(number, columns, parsed, max_width=80):
+    """Funciton which prints results as table
+    Args:
+        number: actual table number
+        columns: columns in table
+        parsed: parsed data to display
+    """
+
+    print('%s:' % (number+1))
+    pt = prettytable.PrettyTable(header=False)
+    pt.add_column(None, columns)
+    pt.add_column('data', parsed, align="l")
+    pt.max_width = max_width
+    print(pt)

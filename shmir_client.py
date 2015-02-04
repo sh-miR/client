@@ -8,7 +8,7 @@
 
 import argparse
 import os
-import shutil
+import csv
 from utils import (
     unzip,
     get_request,
@@ -16,6 +16,7 @@ from utils import (
     creator,
     checker,
     wait_until_task,
+    print_parsed_result,
 )
 
 
@@ -41,7 +42,7 @@ def mfold_result(task_id, zipname="now.zip", path="./results/mfold/", verbose=Tr
     os.remove(zipname)
 
     if verbose:
-        print("Result under: {}/\n".format(path + task_id))
+        print("Result in: {}/".format(path + task_id))
 
 
 def mfold(sequence):
@@ -74,21 +75,58 @@ def from_sirna_result(task_id):
         None
     """
     data = get_json("from_sirna_result", task_id)['data']
-
     path = "./results/sirna/{}/".format(task_id)
 
     if data['result']:
-        print("Results under: {}\n".format(path))
+        print("Results in: {}/".format(path))
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        columns = [
+            'scaffold name',
+            'first sequence',
+            'second sequence',
+            'sh-miR',
+            'overall score',
+            'structure score',
+            'homogenity score',
+            'same ends score',
+            'pdf',
+        ]
+
+        # parsing results into csv
+        with open(path + "result.csv", "w") as fp:
+            writer = csv.writer(fp)
+            writer.writerow(columns)
+            for no, result in enumerate(data['result']):
+                mfold_result(result['pdf_reference'], path=path, verbose=False)
+                new_path = "{}{}/{}".format(
+                    path,
+                    result['scaffold_name'],
+                    no+1
+                )
+
+                if not os.path.exists(new_path):
+                    os.makedirs(new_path)
+
+                os.rename(path + result['pdf_reference'], new_path)
+
+                parsed = [
+                    result['scaffold_name'],
+                    result['sequences'][0],
+                    result['sequences'][1],
+                    result['shmir'],
+                    result['score']['all'],
+                    result['score']['structure'],
+                    result['score']['homogeneity'],
+                    result['score']['same_ends'],
+                    new_path
+                ]
+                writer.writerow(parsed)
+                print_parsed_result(no, columns, parsed)
     else:
         print("No sh-miR found")
-
-    for no, (points, shmir, name, mfold_id) in enumerate(data['result']):
-        mfold_result(mfold_id, path=path, verbose=False)
-        new_path = path + name
-        os.rename(path + mfold_id, new_path)
-        print("{}: name: {}, score: {}, pdf: {}\n   result: {}\n".format(
-            no + 1, name, points, new_path, shmir
-        ))
 
 
 def from_sirna(sequences):
@@ -125,33 +163,59 @@ def from_transcript_result(task_id):
         None
     """
     data = get_json("from_transcript_result", task_id)['data']
-
     path = "./results/transcript/{}/".format(task_id)
 
     if data['result']:
-        print("Results under: {}\n".format(path))
+        print("Results in: {}/".format(path))
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        columns = [
+            "scaffold name",
+            "sequence",
+            "sh-miR",
+            "overall score",
+            "structure score",
+            "offtarget score",
+            "regexp score",
+            "pdf"
+        ]
+
+        # parsing results into csv
+        with open(path + "result.csv", "w") as fp:
+            writer = csv.writer(fp)
+            writer.writerow(columns)
+            for no, result in enumerate(data['result']):
+                mfold_result(result['pdf_reference'], path=path, verbose=False)
+                new_path = "{}{}/{}".format(
+                    path,
+                    result['scaffold_name'],
+                    no+1
+                )
+
+                if not os.path.exists(new_path):
+                    os.makedirs(new_path)
+
+                subtask_id = result['pdf_reference'].split("/")[-1]
+                os.rename(path + subtask_id + '/', new_path)
+
+                parsed = [
+                    result['scaffold_name'],
+                    result['sequence'],
+                    result['shmir'],
+                    result['score']['all'],
+                    result['score']['structure'],
+                    result['score']['offtarget'],
+                    result['score']['regexp'],
+                    new_path,
+                ]
+
+                writer.writerow(parsed)
+                print_parsed_result(no, columns, parsed)
+
     else:
         print("No sh-miR found")
-
-    result_string = "{}: backbone: {}, score: {}, sequence: {}\n pdf: {}\n result: {}\n"
-    for no, result in enumerate(data['result']):
-        mfold_result(result['pdf'], path=path, verbose=False)
-        new_path = path + result['backbone']
-
-        if not os.path.exists(new_path):
-            os.makedirs(new_path)
-
-        subtask_id = result['pdf'].split("/")[-1]
-        shutil.move(path + subtask_id + '/', new_path)
-
-        print(result_string.format(
-            no + 1,
-            result['backbone'],
-            result['score'],
-            result['sequence'],
-            os.path.join(new_path, subtask_id),
-            result['sh_mir']
-        ))
 
 
 def from_transcript(transcript, params):
@@ -168,7 +232,7 @@ def from_transcript(transcript, params):
                 default: 10
             * mirna_name -- The name of miRNA backbone to use
                 default: 'all'
-            * stymulators -- one of "yes", "no", "no_difference"
+            * immuno -- one of "yes", "no", "no_difference"
                 default: 'no_difference'
 
     Returns:
@@ -209,7 +273,7 @@ if __name__ == '__main__':
     transcript_parser.add_argument("-maxgc", "--max_gc", type=int)
     transcript_parser.add_argument("-maxoff", "--max_offtarget", type=int)
     transcript_parser.add_argument("-mirna", "--mirna_name", type=str)
-    transcript_parser.add_argument("-stm", "--stymulators", type=str)
+    transcript_parser.add_argument("-immuno", "--immunostimulatory", type=str)
 
     args = parser.parse_args()
     if args.parser == "from_sirna":
