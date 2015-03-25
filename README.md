@@ -2,7 +2,7 @@
 [![GNU License](http://img.shields.io/badge/license-GNU-blue.svg)](http://www.gnu.org/licenses/gpl.html)
 [![Documentation Status](https://readthedocs.org/projects/shmir-client/badge/?version=latest)](https://readthedocs.org/projects/shmir-client/)
 
-Client for [sh-miR Designer RESTful API](https://github.com/Nozdi/shmir)
+Client for [sh-miR Designer RESTful API](https://github.com/sh-miR/designer)
 
 Before usage you need to set up url in settings.py!
 
